@@ -16,8 +16,19 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
 
+/**
+ * @author Mark Vainomaa
+ */
 public final class Votifier2 {
-    /* Calculate SHA256 HMAC from string */
+    /**
+     * Calcualte SHA256-HMAC digest from content
+     *
+     * @param key Key used to calculate hash with
+     * @param content Content to calculate hash from
+     * @return Base64 encoded digest
+     * @throws NoSuchAlgorithmException If 'HmacSHA256' algorithm isn't supported
+     * @throws InvalidKeyException If key is invalid (somehow)
+     */
     public static String calculateSHA256HMACDigest(String key, String content)
             throws NoSuchAlgorithmException, InvalidKeyException{
         Mac SHA256HMAC = Mac.getInstance("HmacSHA256");
@@ -26,7 +37,14 @@ public final class Votifier2 {
         return new String(Base64.getEncoder().encode(SHA256HMAC.doFinal(content.getBytes())));
     }
 
-    /* Generate new vote */
+    /**
+     * Generate new {@link Vote} object.
+     *
+     * @see Vote
+     * @param voterName Voter name, forexample 'mikroskeem'
+     * @param serviceName Service name, forexample 'Minecraft-MP'
+     * @return Vote object.
+     */
     public static Vote newVoteObject(String voterName, String serviceName){
         try {
             return newVoteObject(voterName, InetAddress.getByName("127.0.0.1"), serviceName);
@@ -35,11 +53,27 @@ public final class Votifier2 {
         return null;
     }
 
+    /**
+     * Generate new {@link Vote} object.
+     *
+     * @see Vote
+     * @see #newVoteObject(String, String)
+     * @param voterName Voter name
+     * @param originAddress IPv4 or IPv6 address, where request came from
+     * @param serviceName Service name
+     * @return Vote object.
+     */
     public static Vote newVoteObject(String voterName, InetAddress originAddress, String serviceName){
         return new Vote(voterName, originAddress, Instant.now().toEpochMilli(), serviceName);
     }
 
-    /* Encode vote into JSON string */
+    /**
+     * Encode {@link Vote} object into JSON string
+     *
+     * @param vote Vote object
+     * @param challengeToken Challenge token from Votifier packet
+     * @return Vote object as JSON
+     */
     public static String encodeVote(Vote vote, String challengeToken){
         JSONObject voteObject = new JSONObject();
         voteObject.put("challenge", challengeToken);
@@ -50,7 +84,16 @@ public final class Votifier2 {
         return voteObject.toString();
     }
 
-    /* Get fully encoded vote */
+    /**
+     * Encode Vote object to sendable message,
+     * which can be sent to Votifier
+     *
+     * @param vote Vote object
+     * @param challengeToken Challenge token from Votifier packet
+     * @param key Key used to generate vote packet signature.
+     * @return Encoded message
+     * @throws Exception If signature generation fails
+     */
     public static byte[] encodeMessage(Vote vote, String challengeToken, String key) throws Exception {
         String payload = encodeVote(vote, challengeToken);
         String signature = calculateSHA256HMACDigest(key, payload);
@@ -75,6 +118,9 @@ public final class Votifier2 {
         return (short)(in & 0xFFFF);
     }
 
+    /**
+     * Vote object
+     */
     @RequiredArgsConstructor
     @Getter
     @ToString
