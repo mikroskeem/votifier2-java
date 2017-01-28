@@ -3,6 +3,7 @@ package eu.mikroskeem.test.nuvotifier.java;
 import eu.mikroskeem.nuvotifier.java.Votifier2;
 import org.json.JSONObject;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -10,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class Votifier2Test {
     public static final String TEST_VOTER_NAME = "mikroskeem";
@@ -38,35 +40,39 @@ public class Votifier2Test {
 
     @Test
     public void testVoteSending() throws Exception {
-        /* Open up connection to Votifier */
-        Socket socket = new Socket("127.0.0.1", 8192);
-        InputStream is = socket.getInputStream();
-        OutputStream os = socket.getOutputStream();
+        try {
+            /* Open up connection to Votifier */
+            Socket socket = new Socket("127.0.0.1", 8192);
 
-        /* Read Votifier packet and grab challenge token */
-        String in = new BufferedReader(new InputStreamReader(is)).readLine();
-        String[] votifierIn = in.split(" ");
+            InputStream is = socket.getInputStream();
+            OutputStream os = socket.getOutputStream();
 
-        Assert.assertEquals("Incorrect Votifier data!", 3, votifierIn.length);
-        Assert.assertEquals("Votifier signature mismatch", "VOTIFIER", votifierIn[0]);
+            /* Read Votifier packet and grab challenge token */
+            String in = new BufferedReader(new InputStreamReader(is)).readLine();
+            String[] votifierIn = in.split(" ");
+            Assert.assertEquals("Incorrect Votifier data!", 3, votifierIn.length);
+            Assert.assertEquals("Votifier signature mismatch", "VOTIFIER", votifierIn[0]);
+            String challengeToken = votifierIn[2];
 
-        String challengeToken = votifierIn[2];
+            /* Create vote object */
+            Votifier2.Vote vote = Votifier2.newVoteObject(TEST_VOTER_NAME, TEST_SERVICE_NAME);
+            byte[] message = Votifier2.encodeMessage(vote, challengeToken, TEST_SERVER_KEY);
 
-        /* Create vote object */
-        Votifier2.Vote vote = Votifier2.newVoteObject(TEST_VOTER_NAME, TEST_SERVICE_NAME);
-        byte[] message = Votifier2.encodeMessage(vote, challengeToken, TEST_SERVER_KEY);
+            /* Send vote object */
+            os.write(message);
+            os.flush();
 
-        /* Send vote object */
-        os.write(message);
-        os.flush();
+            /* Read status */
+            in = new BufferedReader(new InputStreamReader(is)).readLine();
+            JSONObject result = new JSONObject(in);
+            Assert.assertEquals("Votifier status was not 'ok'! Data: " + result, "ok", result.get("status"));
 
-        /* Read status */
-        in = new BufferedReader(new InputStreamReader(is)).readLine();
-        JSONObject result = new JSONObject(in);
-        Assert.assertEquals("Votifier status was not 'ok'! Data: " + result, "ok", result.get("status"));
-
-        /* Close connection */
-        os.close();
-        socket.close();
+            /* Close connection */
+            os.close();
+            socket.close();
+        } catch(SocketException e){
+            /* Skip test */
+            Assume.assumeNoException(e);
+        }
     }
 }
