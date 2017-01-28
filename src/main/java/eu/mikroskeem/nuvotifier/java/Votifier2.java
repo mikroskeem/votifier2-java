@@ -29,10 +29,14 @@ public final class Votifier2 {
     /* Generate new vote */
     public static Vote newVoteObject(String voterName, String serviceName){
         try {
-            return new Vote(voterName, InetAddress.getByName("127.0.0.1"), Instant.now().toEpochMilli(), serviceName);
+            return newVoteObject(voterName, InetAddress.getByName("127.0.0.1"), serviceName);
         }
         catch(UnknownHostException ignored){}
         return null;
+    }
+
+    public static Vote newVoteObject(String voterName, InetAddress originAddress, String serviceName){
+        return new Vote(voterName, originAddress, Instant.now().toEpochMilli(), serviceName);
     }
 
     /* Encode vote into JSON string */
