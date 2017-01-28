@@ -12,6 +12,10 @@
     <description>(Nu)Votifier protocol v2 vote packet library</description>
     <inceptionYear>2017</inceptionYear>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <build>
         <defaultGoal>clean compile package</defaultGoal>
         <finalName>votifier-java-${project.version}</finalName>
