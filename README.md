@@ -33,3 +33,28 @@ Assert.assertEquals("Votifier status was not 'ok'! Data: " + result, "ok", resul
 os.close();
 socket.close();
 ```
+
+## Maven repository
+### Repository
+```xml
+<repository>
+    <id>mikroskeem-repo</id>
+    <name>mikroskeem Maven Repository</name>
+    <url>https://repo.wut.ee/repository/mikroskeem-repo/</url>
+    <releases>
+        <enabled>true</enabled>
+    </releases>
+    <snapshots>
+        <enabled>true</enabled>
+    </snapshots>
+</repository>
+```
+
+### Dependency
+```xml
+<dependency>
+  <groupId>eu.mikroskeem.nuvotifier</groupId>
+  <artifactId>java</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
